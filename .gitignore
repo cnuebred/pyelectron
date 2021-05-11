@@ -1,0 +1,4 @@
+/src/settings.py
+/electron_py
+/.vscode
+*/__pycache__
