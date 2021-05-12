@@ -19,39 +19,44 @@ class Connection_mongo:
         self.db: Database
         self.collection: Collection
 
-    def connect(self, collection=None):
+    def connect(self):
         try:
             server = pymongo.MongoClient(SERVER)
             # install dnspython
             db = server[DATABASE]
-            DATABASE_CURSOR["CURSOR"] = db[
-                collection if collection else DEFAULT_COLLECTION
-            ]
+            DATABASE_CURSOR["CURSOR"] = db
             print("connection successful")  # tag_console
-        except:
+        except ServerSelectionTimeoutError:
             print("wrong connection, brake process")  # tag_console
             os._exit(0)
 
 
 class Controller_mongo:
-    def __init__(self, _collection=None, _folder="", _filter={}) -> None:
+    def __init__(self, _collection=DEFAULT_COLLECTION, _folder="", _filter={}) -> None:
         self.config = {"_folder": _folder, "_filter": _filter}
-        self.collection = DATABASE_CURSOR.get("CURSOR")
-        self._collection = _collection
+        self.collection = DATABASE_CURSOR.get("CURSOR")[_collection]
 
-    def tool(self, options) -> None:
+    def _tool(self, options) -> None:
         for config_key, config_value in options.items():
             if config_key not in config_keys:
                 continue
             self.config[config_key] = config_value
 
-    def attr(self, config_selector) -> str:
+    def _attr(self, config_selector) -> str:
         return self.config.get(config_selector)
 
+    def _get_folder(self, catalogs, result) -> dict:
+        for catalog in catalogs:
+            if condition_result := result.get(catalog, None):
+                result = condition_result
+            else:
+                return None
+        return result
+
     def save(self, name, data=None, **options) -> None:
-        self.tool(options)
-        _folder = self.attr("_folder")
-        _filter = self.attr("_filter")
+        self._tool(options)
+        _folder = self._attr("_folder")
+        _filter = self._attr("_filter")
 
         if not bool(_filter):
             return
@@ -65,22 +70,14 @@ class Controller_mongo:
             },
         )
 
-    def insert(self, data, **options):
-        self.tool(options)
+    def insert(self, data, **options) -> None:
+        self._tool(options)
         self.collection.insert_one(data)
 
-    def _get_folder(self, catalogs, result) -> dict:
-        for catalog in catalogs:
-            if condition_result := result.get(catalog, None):
-                result = condition_result
-            else:
-                return None
-        return result
-
     def load(self, loop=False, **options):
-        self.tool(options)
-        _folder = self.attr("_folder")
-        _filter = self.attr("_filter")
+        self._tool(options)
+        _folder = self._attr("_folder")
+        _filter = self._attr("_filter")
         _finder_options = options.get("_finder", None)
         params = _folder.split(".")
 
@@ -93,5 +90,5 @@ class Controller_mongo:
 
         return generator() if loop else next(generator(), None)
 
-    def delete(self, name, **options):
+    def delete(self, name, **options) -> None:
         self.save(name, None, **options)
