@@ -1,4 +1,4 @@
 /src/settings.py
 /electron_py
 /.vscode
-*/__pycache__
+**/__pycache__
