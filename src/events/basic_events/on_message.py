@@ -1,7 +1,8 @@
-from src.core.database.mongo_controller import Controller_mongo
+from ...core.parser.parser_node import Command_Parser
+from ...settings import PREFIX
 
 
 async def on_message_node(message):
-    category = Controller_mongo().load(_filter={"category": "new_data"})
-    print(category)
-    print(message.content)
+    if message.content.startswith(PREFIX):
+        await Command_Parser(message).parser()
+        return
