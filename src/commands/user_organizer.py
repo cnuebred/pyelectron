@@ -2,13 +2,13 @@ from collections import defaultdict
 
 from discord.embeds import Embed
 
-from ..core.database.mongo_controller import Controller_mongo
+from ..core.database.mongo_controller import ControllerMongo
 from .command_node import command_exe
 
 
 @command_exe
 async def help(message, params):
-    list_of_commands = Controller_mongo(_collection="config").load(
+    list_of_commands = ControllerMongo(_collection="config").load(
         _filter={"category": "commands"}, _folder="commands"
     )
     commands_by_permission = defaultdict(list)

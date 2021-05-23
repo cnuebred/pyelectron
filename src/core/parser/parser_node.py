@@ -1,10 +1,10 @@
 from ...commands import *
 from ...settings import PREFIX
-from ...utils import is_member
-from ..database.mongo_controller import Controller_mongo
+from ...utils import is_member, log
+from ..database.mongo_controller import ControllerMongo
 
 
-class Command_Parser:
+class CommandParser:
     def __init__(self, message) -> None:
         content_array = message.content.strip().split()
         self.message = message
@@ -14,7 +14,7 @@ class Command_Parser:
         self.guild = message.guild or None
 
     def _check_custom_command(self, all_permission):
-        role_permission = Controller_mongo(_collection="guild").load(
+        role_permission = ControllerMongo(_collection="guild").load(
             _filter={"guild_id": str(self.guild.id)},
             _folder="configuration.roles_commands",
         )
@@ -38,13 +38,12 @@ class Command_Parser:
 
     async def _get_user_permission(self, target_permission):
         member = await is_member(self.message.author, self.guild)
-
         if not member:
-            raise ("Member not found")
+            return log((["b", "bl"], "The member does not exist"))
 
         message_author_permission = [str(role.id) for role in member.roles]
 
-        command_permission = Controller_mongo(_collection="guild").load(
+        command_permission = ControllerMongo(_collection="guild").load(
             _filter={"guild_id": str(self.guild.id)}, _folder="configuration.roles"
         )
 
@@ -79,7 +78,7 @@ class Command_Parser:
 
     async def parser(self):
 
-        command_data = Controller_mongo(_collection="config").load(
+        command_data = ControllerMongo(_collection="config").load(
             _filter={"category": "commands"}, _folder=f"commands.{self.command}"
         )
 

@@ -12,7 +12,7 @@ config_keys = ["_folder", "_filter"]
 DATABASE_CURSOR = {"CURSOR": None}
 
 
-class Connection_mongo:
+class ConnectionMongo:
     def __init__(self):
         print(self)
         self.server: MongoClient
@@ -31,7 +31,7 @@ class Connection_mongo:
             os._exit(0)
 
 
-class Controller_mongo:
+class ControllerMongo:
     def __init__(self, _collection=DEFAULT_COLLECTION, _folder="", _filter={}) -> None:
         self.config = {"_folder": _folder, "_filter": _filter}
         self.collection = DATABASE_CURSOR.get("CURSOR")[_collection]
