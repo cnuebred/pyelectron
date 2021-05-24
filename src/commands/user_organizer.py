@@ -41,7 +41,7 @@ async def help(message, params):
 async def details(message, command, command_data):
     embed = Embed(title=command, description=command)
     embed.add_field(
-        name=command_data.get("permission"),
-        value=command_data.get("description").get("pl"),
+        name=command_data.get("command_permission"),
+        value=command_data.get("description_pl"),
     )
     await message.channel.send(embed=embed)

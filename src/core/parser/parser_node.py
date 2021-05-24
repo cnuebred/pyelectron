@@ -1,7 +1,7 @@
 from ...commands import *
-from ...settings import PREFIX
+from ...settings import BOT_OWNER, PREFIX
 from ...utils import is_member, log
-from ..database.mongo_controller import ControllerMongo
+from ..database.postgres_controller import ControllerPostgres
 
 
 class CommandParser:
@@ -13,57 +13,37 @@ class CommandParser:
         self.channel_type = str(message.channel.type)
         self.guild = message.guild or None
 
-    def _check_custom_command(self, all_permission):
-        role_permission = ControllerMongo(_collection="guild").load(
-            _filter={"guild_id": str(self.guild.id)},
-            _folder="configuration.roles_commands",
-        )
-        for permissions in all_permission:
-            if allow_commands := role_permission.get(permissions):
-                if self.command in allow_commands:
-                    return True
-
-        return False
-
-    def _compare_permissions(self, target_permission, all_permission=None):
-        top_permission = all_permission[-1]
-        if target_permission == "user" or top_permission == "root":
-            return True
-        elif target_permission == "custom" and all_permission:
-            return self._check_custom_command(all_permission)
-        elif target_permission == top_permission:
-            return True
-
-        return False
-
     async def _get_user_permission(self, target_permission):
+        if target_permission == "user":
+            print("user")
+            return True
+
         member = await is_member(self.message.author, self.guild)
         if not member:
             return log((["b", "bl"], "The member does not exist"))
 
-        message_author_permission = [str(role.id) for role in member.roles]
+        # if str(member.id) == BOT_OWNER:
+        #     return True
 
-        command_permission = ControllerMongo(_collection="guild").load(
-            _filter={"guild_id": str(self.guild.id)}, _folder="configuration.roles"
+        # if target_permission != "owner" and int(member.id) == int(self.guild.owner_id):
+        #     return True
+
+        message_author_permission = [str(role.id) for role in member.roles]
+        command_permission = ControllerPostgres(table="guild_config_roles").load(
+            condition=f"guild_id = '{str(self.guild.id)}' AND command_name = '{self.command}'",
+            selector="role_id",
         )
 
         shared_permissions = [
-            permission
-            for permission in list(command_permission.values())
-            if permission in message_author_permission
+            permission["role_id"]
+            for permission in command_permission
+            if permission["role_id"] in message_author_permission
         ]
 
         if not shared_permissions:
-            all_permission = ["user"]
-        else:
-            all_permission = [
-                list(command_permission.keys())[
-                    list(command_permission.values()).index(shared)
-                ]
-                for shared in shared_permissions
-            ]
+            return False
 
-        return self._compare_permissions(target_permission, all_permission)
+        return True
 
     def _check_channel_type(self, target_channel):
         if target_channel in ["text", "news"]:
@@ -78,24 +58,22 @@ class CommandParser:
 
     async def parser(self):
 
-        command_data = ControllerMongo(_collection="config").load(
-            _filter={"category": "commands"}, _folder=f"commands.{self.command}"
-        )
-
-        if not command_data:
+        if not (command_data := COMMANDS.get(self.command)):
             return
 
         if not self._check_channel_type(command_data.get("channel_type")):
             return
 
-        if "--help" in self.params:
-            return await COMMANDS.get("details")(
-                self.message, self.command, command_data
-            )
-
         if self.channel_type != "private":
-            if not await self._get_user_permission(command_data.get("permission")):
+            if not await self._get_user_permission(
+                command_data.get("command_permission")
+            ):
                 return
 
-        if self.command in list(COMMANDS.keys()):
-            return await COMMANDS.get(self.command)(self.message, self.params)
+        if "--help" in self.params:
+            help_function = COMMANDS.get("details").get("func")
+            if help_function:
+                return await help_function(self.message, self.command, command_data)
+
+        if command_function := command_data.get("func"):
+            return await command_function(self.message, self.params)
