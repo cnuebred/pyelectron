@@ -42,13 +42,11 @@ async def details(message, command, command_data):
     embed = Embed(title=command, description=command)
     permission_note = (
         f"**Permission -** {perm}"
-        if (perm := command_data.get("permission"))
+        if (perm := command_data.get("command_permission"))
         else "Here be dragons"
     )
     description_note = (
-        desc.get("pl")
-        if (desc := command_data.get("description"))
-        else "Here be dragons too"
+        desc if (desc := command_data.get("description_pl")) else "Here be dragons too"
     )
 
     embed.add_field(
