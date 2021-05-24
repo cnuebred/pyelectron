@@ -40,8 +40,19 @@ async def help(message, params):
 @command_exe
 async def details(message, command, command_data):
     embed = Embed(title=command, description=command)
+    permission_note = (
+        f"**Permission -** {perm}"
+        if (perm := command_data.get("permission"))
+        else "Here be dragons"
+    )
+    description_note = (
+        desc.get("pl")
+        if (desc := command_data.get("description"))
+        else "Here be dragons too"
+    )
+
     embed.add_field(
-        name=command_data.get("permission"),
-        value=command_data.get("description").get("pl"),
+        name=permission_note,
+        value=description_note,
     )
     await message.channel.send(embed=embed)
