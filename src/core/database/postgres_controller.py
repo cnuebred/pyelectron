@@ -1,6 +1,8 @@
 import psycopg2
 from psycopg2.extras import DictCursor
-from settings import DB_HOST, DB_NAME, DB_PASS, DB_USER
+
+from ...utils import log
+from ...settings import DB_HOST, DB_NAME, DB_PASS, DB_USER
 
 
 class ControllerPostgres:
@@ -33,19 +35,25 @@ class ControllerPostgres:
         self.connection.commit()
         return cursor_data
 
-    def insert(self, columns, values, table=None, inner=None) -> None:
+    def insert(self, values, columns="", table=None, inner=None) -> None:
         self.table = table
-        self.columns = columns
         self.values = values
-        len_condition = self._correct_columns_len()
+        if columns:
+            self.columns = columns
+            len_condition = self._correct_columns_len()
 
-        if not len_condition:
-            return
+            if not len_condition:
+                return
 
-        values = [self.is_values(value) for value in values]
+            columns = f"({', '.join(self.columns)})"
 
-        query = f"INSERT INTO {self.table} ({', '.join(self.columns)}) VALUES({', '.join(self.values)})"
-        self.cursor.execute(query)
+        values = ", ".join([self.is_values(value) for value in values])
+
+        query = f"INSERT INTO {self.table} {columns} VALUES({values})"
+        try:
+            self.cursor.execute(query)
+        except psycopg2.errors.UniqueViolation:
+            return log((["b", "f"], "unique values"))
 
         self.connection.commit()
 
@@ -66,7 +74,7 @@ class ControllerPostgres:
 
         query = f"UPDATE {self.table} SET {', '.join(ziped)} {self._update_inner(inner)} {self._condition_parser(condition, not bool(inner))}"
         self.cursor.execute(query)
-
+        # + exception
         self.connection.commit()
 
     def _update_inner(self, inner):
