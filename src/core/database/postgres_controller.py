@@ -75,7 +75,7 @@ class ControllerPostgres:
 
         query = f"UPDATE {self.table} SET {', '.join(ziped)} {self._update_inner(inner)} {self._condition_parser(condition, not bool(inner))}"
         self.cursor.execute(query)
-        # + exception
+
         self.connection.commit()
 
     def _update_inner(self, inner):
