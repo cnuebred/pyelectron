@@ -18,6 +18,7 @@ class CommandParser:
             return True
 
         member = await is_member(self.message.author, self.guild)
+
         if not member:
             return log((["b", "bl"], "The member does not exist"))
 
