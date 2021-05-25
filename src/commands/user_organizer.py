@@ -1,34 +1,33 @@
 from collections import defaultdict
+from typing import Text
 
 from discord.embeds import Embed
 
-from ..core.database.mongo_controller import ControllerMongo
+from ..core.database.postgres_controller import ControllerPostgres
 from .command_node import command_exe
 
 
 @command_exe
-async def help(message, params):
-    list_of_commands = ControllerMongo(_collection="config").load(
-        _filter={"category": "commands"}, _folder="commands"
+async def help(message, params, **options):
+    pg_commands = ControllerPostgres(table="config_commands")
+    all_permissions = pg_commands.load(
+        selector="DISTINCT command_permission", join=True
     )
-    commands_by_permission = defaultdict(list)
-
-    def command_key(command, properties):
-        commands_by_permission[properties.get("permission")].append(f"`{command}`")
-
-    [
-        command_key(command, properties)
-        for command, properties in list_of_commands.items()
-    ]
 
     set_description = ""
-    for permission, property in commands_by_permission.items():
+    for permission in all_permissions:
+        commands_on_permission = pg_commands.load(
+            selector="command_name",
+            condition=f"command_permission = '{permission}'",
+            join=True,
+        )
+
         set_description += f"""**Commands for {permission}**
-        {'**,** '.join(property)}
+        {'**,** '.join([f"`{command}`" for command in commands_on_permission])}
         """
 
     set_description += """**For more information**
-        enter the selected command with a note `--help`
+        Enter the selected command with a note `--help`
         > **Sample:**
         > `;help --help`
         """
@@ -38,8 +37,11 @@ async def help(message, params):
 
 
 @command_exe
-async def details(message, command, command_data):
+async def details(message, command, **options):
     embed = Embed(title=command, description=command)
+    if not (command_data := options.get("command_data")):
+        return
+
     permission_note = (
         f"**Permission -** {perm}"
         if (perm := command_data.get("command_permission"))

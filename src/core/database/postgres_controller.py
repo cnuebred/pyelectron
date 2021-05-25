@@ -25,14 +25,15 @@ class ControllerPostgres:
         self.connection.commit()
         return self.cursor
 
-    def load(self, condition=None, selector="*", table=None, inner=None):
+    def load(self, condition=None, selector="*", join=False, table=None, inner=None):
         self.table = table
         query = f"SELECT {selector} FROM {self.table} {self._inner_join(inner)} {self._condition_parser(condition)}"
         self.cursor.execute(query)
-
         cursor_data = self.cursor.fetchall()
+        cursor_data = sum(cursor_data, []) if join else cursor_data
 
         self.connection.commit()
+
         return cursor_data
 
     def insert(self, values, columns="", table=None, inner=None) -> None:
