@@ -1,5 +1,4 @@
 import re
-from typing import Text
 
 import discord
 from discord.embeds import Embed
@@ -12,6 +11,7 @@ FORM_EMOJIS = ["1⃣", "2⃣", "3⃣", "4⃣", "5⃣", "6⃣", "7⃣", "8⃣", "
 
 EMBED_RE = r"(?P<selector>\w+?)(?<=[^\\])<(?P<content>.+?)(?<=[^\\])>"
 EMBED_FIELD_RE = r"(?P<name>.+?)(?<=[^\\]);;(?P<value>.+)"
+EMBED_SPECIFIC = {"footer": "text", "image": "url", "author": "name"}
 
 
 @command_exe
@@ -77,19 +77,13 @@ async def embed(message, params, **options):
 
         content = content.replace("\\", "")
 
-        if selector == "footer":
-            embed_object["footer"] = {"text": content}
-            continue
-
-        if selector == "image":
-            embed_object["image"] = {"url": content}
-            continue
-
-        if selector == "author":
-            embed_object["author"] = {"name": content}
-            continue
+        for key, value in EMBED_SPECIFIC.items():
+            if selector == key:
+                embed_object[key] = {value: content}
+                continue
 
         embed_object.update({selector: content})
+
     try:
         embed_message = Embed().from_dict(embed_object)
         await message.channel.send(embed=embed_message)
