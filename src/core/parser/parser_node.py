@@ -9,7 +9,7 @@ class CommandParser:
         content_array = message.content.strip().split()
         self.message = message
         self.command = content_array[0][len(PREFIX) :]
-        self.params = content_array[0:]
+        self.params = content_array[1:]
         self.channel_type = str(message.channel.type)
         self.guild = message.guild or None
 
@@ -46,8 +46,8 @@ class CommandParser:
         return True
 
     def _check_channel_type(self, target_channel):
-        if target_channel in ["text", "news"]:
-            target_channel = "guild"
+        if str(self.channel_type) in ["text", "news"]:
+            self.channel_type = "guild"
 
         if target_channel == "all":
             return True

@@ -1,6 +1,3 @@
-from collections import defaultdict
-from typing import Text
-
 from discord.embeds import Embed
 
 from ..core.database.postgres_controller import ControllerPostgres
