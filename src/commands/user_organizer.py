@@ -1,55 +1,49 @@
 from discord.embeds import Embed
 
+
 from ..core.database.postgres_controller import ControllerPostgres
 from .command_node import command_exe
 
 
+def set_description(description):  # TODO
+    return ""
+
+
 @command_exe
-async def help(message, params, **options):
-    pg_commands = ControllerPostgres(table="config_commands")
-    all_permissions = pg_commands.load(
-        selector="DISTINCT command_permission", join=True
+async def profile(message, params, **options):
+    user_data = ControllerPostgres(table="user_profile")
+    user_data = user_data.load(
+        condition=f"guild_id = '{message.guild.id}' AND user_id = '{message.author.id}'"
     )
-
-    set_description = ""
-    for permission in all_permissions:
-        commands_on_permission = pg_commands.load(
-            selector="command_name",
-            condition=f"command_permission = '{permission}'",
-            join=True,
-        )
-
-        set_description += f"""**Commands for {permission}**
-        {'**,** '.join([f"`{command}`" for command in commands_on_permission])}
-        """
-
-    set_description += """**For more information**
-        Enter the selected command with a note `--help`
-        > **Sample:**
-        > `;help --help`
-        """
-
-    embed = Embed(title="List of available commands", description=set_description)
-    await message.channel.send(embed=embed)
-
-
-@command_exe
-async def details(message, command, **options):
-    embed = Embed(title=command, description=command)
-    if not (command_data := options.get("command_data")):
+    if not user_data:
         return
+    user_data = user_data[0]
 
-    permission_note = (
-        f"**Permission -** {perm}"
-        if (perm := command_data.get("command_permission"))
-        else "Here be dragons"
+    member = await message.guild.fetch_member(int(message.author.id))
+
+    description_profile = set_description(user_data["description"])
+
+    message_embed = Embed(description=f"Profile <@{message.author.id}>")
+    message_embed.set_thumbnail(url=message.author.avatar_url)
+    message_embed.add_field(
+        name="Level Data",
+        value=f"**experience**: {user_data['experience_user']}\n**level**: {user_data['level_user']}",
+        inline=True,
     )
-    description_note = (
-        desc if (desc := command_data.get("description_pl")) else "Here be dragons too"
+    message_embed.add_field(
+        name="Joined At",
+        value=f"```{member.joined_at.strftime('%Y/%m/%d %H:%M:%S')}```",
+        inline=True,
+    )
+    message_embed.add_field(
+        name="Messages",
+        value=f"```{user_data['messages']}```",
+        inline=True,
+    )
+    message_embed.add_field(
+        name="Links",
+        value=f"> {description_profile}",
+        inline=True,
     )
 
-    embed.add_field(
-        name=permission_note,
-        value=description_note,
-    )
-    await message.channel.send(embed=embed)
+    await message.channel.send(embed=message_embed)
