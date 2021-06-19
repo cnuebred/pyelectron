@@ -1,12 +1,32 @@
-from discord.embeds import Embed
+import re
 
+from discord.embeds import Embed
 
 from ..core.database.postgres_controller import ControllerPostgres
 from .command_node import command_exe
 
 
-def set_description(description):  # TODO
-    return ""
+def set_description(description):
+    regex = r"(?P<key_>\w*(?=\())(?:\()(?P<value_>.+?)(?:\))"
+    result_str = ""
+    if not description:
+        description = ""
+
+    def key_(part):
+        result_regex = re.search(pattern=regex, string=part)
+        if not result_regex:
+            return "•"
+        return f"[{result_regex.group('key_')}]({result_regex.group('value_')})"
+
+    result_str = " | ".join(
+        [
+            result_part
+            for part in description.split(",")
+            if (result_part := key_(part)) and part
+        ]
+    )
+
+    return result_str if result_str else "**•**"
 
 
 @command_exe
@@ -42,8 +62,34 @@ async def profile(message, params, **options):
     )
     message_embed.add_field(
         name="Links",
-        value=f"> {description_profile}",
+        value=f"{description_profile}",
         inline=True,
     )
 
     await message.channel.send(embed=message_embed)
+
+
+@command_exe
+async def account(message, params, **options):
+    if params:
+        code = params[0]
+        login_base = ControllerPostgres("pyelectron_service_login")
+        login_base.update(
+            columns=["user_id"],
+            values=[message.author.id],
+            condition=f"verify_code = {code.strip()}",
+        )
+        id_value = login_base.load(
+            selector="user_id", condition=f"verify_code = {code.strip()}"
+        )
+        print(id_value)
+        embed_message = Embed(
+            description="Successfully verified\nThank you for joined to us"
+        )
+        return await message.channel.send(embed=embed_message)
+
+    embed_message = Embed(title="Create Account")
+    embed_message.description = (
+        "[👆 click here](http://site) to create account on **pyElectron Service**"
+    )
+    await message.channel.send(embed=embed_message)
