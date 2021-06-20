@@ -8,7 +8,7 @@ class CommandParser:
     def __init__(self, message) -> None:
         content_array = message.content.strip().split()
         self.message = message
-        self.command = content_array[0][len(PREFIX) :]
+        self.command = content_array[0][len(PREFIX) :].lower()
         self.params = content_array[1:]
         self.channel_type = str(message.channel.type)
         self.guild = message.guild or None
