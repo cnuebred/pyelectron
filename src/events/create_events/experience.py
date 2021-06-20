@@ -21,9 +21,9 @@ class LevelSystem:
             columns=["messages"], values=[messages], condition=self.condition
         )
 
-    def level_algorithm(self, lvl):
-        return math.floor(10 + (lvl * (lvl * 2 + lvl ** 2)) * 3) // int(
-            (math.log2(lvl) * math.sqrt(lvl * (lvl + 10))) + 1
+    def level_algorithm(lvl):
+        return math.floor(5 * lvl + (lvl * (lvl * 2 + lvl ** 2)) * 3) // int(
+            (math.log2(lvl) * math.sqrt(lvl * lvl)) + 1
         )
 
     async def next_level(self, next_lvl, experience_sub, message):
