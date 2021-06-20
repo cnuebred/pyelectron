@@ -24,9 +24,9 @@ def event_node(bot):
         await on_reaction_remove(bot, data)
 
     @bot.event
-    async def on_guild_join():
-        await on_guild_join_node()
+    async def on_guild_join(guild):
+        await on_guild_join_node(guild)
 
     @bot.event
-    async def on_guild_remove():
-        await on_guild_remove_node()
+    async def on_guild_remove(guild):
+        await on_guild_remove_node(guild)
