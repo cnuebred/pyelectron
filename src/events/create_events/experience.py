@@ -70,6 +70,10 @@ class LevelSystem:
             )
             return
 
+        message_len = exp_info["content_sum"] + len(message.content)
+
         self.user_table.update(
-            columns=["experience_user"], values=[experience], condition=self.condition
+            columns=["experience_user", "content_sum"],
+            values=[experience, message_len],
+            condition=self.condition,
         )
