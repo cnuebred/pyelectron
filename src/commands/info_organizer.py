@@ -103,7 +103,7 @@ async def details(message, command, **options):
     await message.channel.send(embed=embed)
 
 
-# @command_exe # - removed tmp
+@command_exe  # - removed tmp
 async def embed(message, params, **options):
     data = re.findall(EMBED_RE, " ".join(params))
 

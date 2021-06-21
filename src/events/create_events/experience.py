@@ -21,7 +21,7 @@ class LevelSystem:
             columns=["messages"], values=[messages], condition=self.condition
         )
 
-    def level_algorithm(lvl):
+    def level_algorithm(self, lvl):
         return math.floor(5 * lvl + (lvl * (lvl * 2 + lvl ** 2)) * 3) // int(
             (math.log2(lvl) * math.sqrt(lvl * lvl)) + 1
         )
@@ -70,7 +70,11 @@ class LevelSystem:
             )
             return
 
-        message_len = exp_info["content_sum"] + len(message.content)
+        message_len = (
+            exp_info["content_sum"] + len(message.content)
+            if exp_info["content_sum"]
+            else len(message.content)
+        )
 
         self.user_table.update(
             columns=["experience_user", "content_sum"],
