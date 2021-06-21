@@ -25,8 +25,10 @@ class CommandParser:
         if str(member.id) == BOT_OWNER:
             return True
 
-        if target_permission != "owner" and int(member.id) == int(self.guild.owner_id):
+        if target_permission == "owner" and int(member.id) == int(self.guild.owner_id):
             return True
+
+        # Else if target_permission = custom
 
         message_author_permission = [str(role.id) for role in member.roles]
         command_permission = ControllerPostgres(table="guild_config_roles").load(

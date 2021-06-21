@@ -2,6 +2,8 @@ import re
 
 import psycopg2
 
+from ..core.mockdata import COMMANDS
+
 from ..core.database.postgres_controller import ControllerPostgres
 
 from ..utils import log
@@ -70,3 +72,9 @@ async def emoji_s(message, params, **options):
             )
         except psycopg2.errors.InFailedSqlTransaction:
             log((["b", "f"], "duplicate values"))
+
+
+@command_exe
+async def refresh_db(message, params, **options):
+    for command_name in COMMANDS.keys():
+        command_exe(command_name)
