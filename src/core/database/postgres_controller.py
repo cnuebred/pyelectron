@@ -25,9 +25,23 @@ class ControllerPostgres:
         self.connection.commit()
         return self.cursor
 
-    def load(self, condition=None, selector="*", join=False, table=None, inner=None):
+    def load(
+        self,
+        condition=None,
+        selector="*",
+        order_by="",
+        limit="",
+        join=False,
+        table=None,
+        inner=None,
+    ):
         self.table = table
-        query = f"SELECT {selector} FROM {self.table} {self._inner_join(inner)} {self._condition_parser(condition)}"
+        if order_by:
+            order_by = f"ORDER BY {order_by}"
+        if limit:
+            limit = f"LIMIT {limit}"
+
+        query = f"SELECT {selector} FROM {self.table} {self._inner_join(inner)} {self._condition_parser(condition)} {order_by} {limit}"
         self.cursor.execute(query)
         cursor_data = self.cursor.fetchall()
         cursor_data = sum(cursor_data, []) if join else cursor_data
