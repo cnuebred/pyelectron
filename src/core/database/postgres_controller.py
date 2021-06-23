@@ -30,6 +30,7 @@ class ControllerPostgres:
         condition=None,
         selector="*",
         order_by="",
+        order_by_descending=False,
         limit="",
         join=False,
         table=None,
@@ -37,7 +38,7 @@ class ControllerPostgres:
     ):
         self.table = table
         if order_by:
-            order_by = f"ORDER BY {order_by}"
+            order_by = f"ORDER BY {order_by} {'DESC' if order_by_descending else ''}"
         if limit:
             limit = f"LIMIT {limit}"
 
