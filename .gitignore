@@ -1,4 +1,16 @@
+# Secret
 /src/settings.py
-/electron_py
+
+# Virtual environment
+venv/
+env/
+
+# Development
 /.vscode
+.idea/
+
+# Python
 **/__pycache__
+
+# Others
+/electron_py

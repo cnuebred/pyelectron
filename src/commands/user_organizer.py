@@ -93,3 +93,32 @@ async def account(message, params, **options):
         "[👆 click here](http://site) to create account on **pyElectron Service**"
     )
     await message.channel.send(embed=embed_message)
+
+
+@command_exe
+async def top(message, params, **options):
+    member_limit = int(params[0]) if params else 10
+    if member_limit > 20:
+        member_limit = 20
+
+    member_profile_controller = ControllerPostgres(table="user_profile")
+    top_members = member_profile_controller.load(
+        order_by="messages",
+        limit=str(member_limit),
+        order_by_descending=True,
+    )
+
+    embed_message = Embed(title=f"Top {len(top_members)} members:")
+
+    for index, user_data in enumerate(top_members, 1):
+        member = message.guild.get_member(int(user_data[1]))
+        member_nick_tag = f"{member.name}#{member.discriminator}"
+        member_messages_amount = user_data[4]
+
+        embed_message.add_field(
+            name=f"{index}. {member_nick_tag}",
+            value=f"{member_messages_amount}",
+            inline=False,
+        )
+
+    return await message.channel.send(embed=embed_message)
